@@ -1,4 +1,4 @@
-import type { OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
+import type { OAuth2ClientGrantType, OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
 import { OAuth2Client, TokenStore } from '@appwise/oauth2-client'
 import type { Axios, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
@@ -73,9 +73,7 @@ export class OAuth2VueClient {
     if (tokens === null)
       return null
 
-    const parsedTokens = JSON.parse(tokens) as OAuth2ClientTokensWithExpiration
-
-    return parsedTokens
+    return JSON.parse(tokens) as OAuth2ClientTokensWithExpiration
   }
 
   public getClient(): TokenStore | null {
@@ -86,8 +84,17 @@ export class OAuth2VueClient {
     this.client = null
   }
 
-  public async login(username: string, password: string): Promise<void> {
-    const client = await this.oAuthFactory.login(username, password)
+  public async loginPassword(username: string, password: string): Promise<void> {
+    const client = await this.oAuthFactory.loginPassword(username, password)
+
+    const tokens = client.getTokens()
+
+    this.saveTokensToLocalStorage(tokens)
+    this.client = this.createClient(tokens)
+  }
+
+  public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
+    const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
 
     const tokens = client.getTokens()
 

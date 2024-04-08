@@ -1,7 +1,7 @@
 {
   "name": "@appwise/oauth2-vue-client",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "packageManager": "pnpm@8.12.1",
   "description": "_description_",
   "author": "Wouter Laermans <wouter.laermans@wisemen.digital>, Jeroen Van Caekenberghe <jeroen.vancaekenberghe@wisemen.digital>",
@@ -41,25 +41,25 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
-    "@appwise/oauth2-client": "^0.0.4",
-    "axios": "^1.6.5"
+    "@appwise/oauth2-client": "0.0.5",
+    "axios": "1.6.5"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.6.0",
-    "@antfu/ni": "^0.21.12",
-    "@antfu/utils": "^0.7.7",
-    "@types/node": "^20.10.5",
-    "bumpp": "^9.2.1",
-    "eslint": "^8.56.0",
-    "esno": "^4.0.0",
-    "lint-staged": "^15.2.0",
-    "pnpm": "^8.12.1",
-    "rimraf": "^5.0.5",
-    "simple-git-hooks": "^2.9.0",
-    "typescript": "^5.3.3",
-    "unbuild": "^2.0.0",
-    "vite": "^5.0.10",
-    "vitest": "^1.1.0"
+    "@antfu/eslint-config": "2.13.0",
+    "@antfu/ni": "0.21.12",
+    "@antfu/utils": "0.7.7",
+    "@types/node": "20.12.5",
+    "bumpp": "9.4.0",
+    "eslint": "9.0.0",
+    "esno": "4.7.0",
+    "lint-staged": "15.2.2",
+    "pnpm": "8.15.6",
+    "rimraf": "5.0.5",
+    "simple-git-hooks": "2.11.1",
+    "typescript": "5.4.4",
+    "unbuild": "2.0.0",
+    "vite": "5.2.8",
+    "vitest": "1.4.0"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
