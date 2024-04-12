@@ -1,13 +1,14 @@
 import type { OAuth2ClientGrantType, OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
 import { OAuth2Client, TokenStore } from '@appwise/oauth2-client'
-import type { Axios, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
+import type { AxiosStatic, InternalAxiosRequestConfig } from 'axios'
 
 interface OAuth2VueClientOptions {
-  axios: Axios | AxiosInstance
+  axios: AxiosStatic
   clientId: string
   clientSecret: string
   tokenEndpoint: string
   scopes?: string[]
+  isMock?: boolean
 }
 
 export class OAuth2VueClient {
@@ -85,6 +86,9 @@ export class OAuth2VueClient {
   }
 
   public async loginPassword(username: string, password: string): Promise<void> {
+    if (this.options.isMock)
+      return Promise.resolve()
+
     const client = await this.oAuthFactory.loginPassword(username, password)
 
     const tokens = client.getTokens()
@@ -94,6 +98,9 @@ export class OAuth2VueClient {
   }
 
   public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
+    if (this.options.isMock)
+      return Promise.resolve()
+
     const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
 
     const tokens = client.getTokens()
@@ -108,6 +115,9 @@ export class OAuth2VueClient {
   }
 
   public isLoggedIn(): boolean {
+    if (this.options.isMock)
+      return true
+
     const client = this.getClient()
     return client?.getTokens() != null
   }

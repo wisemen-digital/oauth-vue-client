@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@appwise/oauth2-client": "0.0.5",
-    "axios": "1.6.5"
+    "axios": "1.6.8"
   },
   "devDependencies": {
     "@antfu/eslint-config": "2.13.0",
