@@ -1,13 +1,14 @@
-import type { OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
+import type { OAuth2ClientGrantType, OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
 import { OAuth2Client, TokenStore } from '@appwise/oauth2-client'
-import type { Axios, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
+import type { AxiosStatic, InternalAxiosRequestConfig } from 'axios'
 
 interface OAuth2VueClientOptions {
-  axios: Axios | AxiosInstance
+  axios: AxiosStatic
   clientId: string
   clientSecret: string
   tokenEndpoint: string
   scopes?: string[]
+  isMock?: boolean
 }
 
 export class OAuth2VueClient {
@@ -73,9 +74,7 @@ export class OAuth2VueClient {
     if (tokens === null)
       return null
 
-    const parsedTokens = JSON.parse(tokens) as OAuth2ClientTokensWithExpiration
-
-    return parsedTokens
+    return JSON.parse(tokens) as OAuth2ClientTokensWithExpiration
   }
 
   public getClient(): TokenStore | null {
@@ -86,8 +85,23 @@ export class OAuth2VueClient {
     this.client = null
   }
 
-  public async login(username: string, password: string): Promise<void> {
-    const client = await this.oAuthFactory.login(username, password)
+  public async loginPassword(username: string, password: string): Promise<void> {
+    if (this.options.isMock)
+      return Promise.resolve()
+
+    const client = await this.oAuthFactory.loginPassword(username, password)
+
+    const tokens = client.getTokens()
+
+    this.saveTokensToLocalStorage(tokens)
+    this.client = this.createClient(tokens)
+  }
+
+  public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
+    if (this.options.isMock)
+      return Promise.resolve()
+
+    const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
 
     const tokens = client.getTokens()
 
@@ -101,6 +115,9 @@ export class OAuth2VueClient {
   }
 
   public isLoggedIn(): boolean {
+    if (this.options.isMock)
+      return true
+
     const client = this.getClient()
     return client?.getTokens() != null
   }
