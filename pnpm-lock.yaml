@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@appwise/oauth2-client':
-        specifier: /Users/kirylmaltsav/Workspace/wisemen/oauth-client/appwise-oauth2-client-0.0.5.tgz
-        version: file:../oauth-client/appwise-oauth2-client-0.0.5.tgz
+        specifier: 0.0.6
+        version: 0.0.6
       axios:
         specifier: 1.6.8
         version: 1.6.8
@@ -175,6 +175,14 @@ packages:
   /@antfu/utils@0.7.7:
     resolution: {integrity: sha512-gFPqTG7otEJ8uP6wrhDv6mqwGWYZKNvAcCq6u9hOj0c+IKCEsY4L1oC9trPq2SaWIzAfHvqfBDxF591JkMf+kg==}
     dev: true
+
+  /@appwise/oauth2-client@0.0.6:
+    resolution: {integrity: sha512-UVV23kwOnWznq+O+5Fk3mXKLiZbsBWArbhTqdoLkQG8w8rBXvRuBqmKs6og/qVLUhVcoIT72WKl4UKxqk7mfqA==}
+    dependencies:
+      axios: 1.6.8
+    transitivePeerDependencies:
+      - debug
+    dev: false
 
   /@babel/code-frame@7.22.13:
     resolution: {integrity: sha512-XktuhWlJ5g+3TJXc5upd9Ks1HutSArik6jf2eAjYFyIOf4ej3RN+184cZbzDvbPnuTJIUhPKKJE3cIsYTiAT3w==}
@@ -5303,13 +5311,3 @@ packages:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
     dev: true
-
-  file:../oauth-client/appwise-oauth2-client-0.0.5.tgz:
-    resolution: {integrity: sha512-zGgbLTLnfKULVDWJlNGzzvYKteQQNf7oW0G0eG9wxSMFMVVe70QEogrz6W3fksW2R+lufk2Sacm0Rxxbi0qDEw==, tarball: file:../oauth-client/appwise-oauth2-client-0.0.5.tgz}
-    name: '@appwise/oauth2-client'
-    version: 0.0.5
-    dependencies:
-      axios: 1.6.8
-    transitivePeerDependencies:
-      - debug
-    dev: false
