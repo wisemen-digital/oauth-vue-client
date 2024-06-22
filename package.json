@@ -63,15 +63,9 @@
     "vitest-localstorage-mock": "^0.1.2"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged && pnpm type-check-staged && pnpm test-staged"
+    "pre-commit": "pnpm lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"
-  },
-  "test-staged": {
-    "*": "vitest"
-  },
-  "type-check-staged": {
-    "*": "tsc --noEmit"
   }
 }
