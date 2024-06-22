@@ -81,4 +81,45 @@ describe('oAuth2VueClient', () => {
 
     expect(config.headers.Authorization).toEqual(`Bearer ${MOCK_TOKENS.access_token}`)
   })
+
+  it('adds tokens to localStorage on login', async () => {
+    const oAuthClient = new OAuth2VueClient({
+      clientId: CLIENT_ID,
+      axios,
+      clientSecret: CLIENT_SECRET,
+      tokenEndpoint: TOKEN_ENDPOINT,
+    })
+
+    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+
+    await oAuthClient.loginPassword('username', 'password')
+
+    const actualTokens = JSON.parse(localStorage.getItem('tokens') as string) as OAuth2ClientTokensWithExpiration
+
+    const expectedTokens = {
+      ...MOCK_TOKENS,
+      expires_at: '',
+    }
+
+    expect(actualTokens).toStrictEqual(expectedTokens)
+  })
+
+  it('removes tokens from localStorage on logout', async () => {
+    const oAuthClient = new OAuth2VueClient({
+      clientId: CLIENT_ID,
+      axios,
+      clientSecret: CLIENT_SECRET,
+      tokenEndpoint: TOKEN_ENDPOINT,
+    })
+
+    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+
+    await oAuthClient.loginPassword('username', 'password')
+
+    expect(localStorage.getItem('tokens')).not.toBeNull()
+
+    oAuthClient.logout()
+
+    expect(localStorage.getItem('tokens')).toBeNull()
+  })
 })
