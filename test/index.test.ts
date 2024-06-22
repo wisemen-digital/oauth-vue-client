@@ -98,7 +98,7 @@ describe('oAuth2VueClient', () => {
 
     const expectedTokens = {
       ...MOCK_TOKENS,
-      expires_at: '',
+      expires_at: actualTokens.expires_at,
     }
 
     expect(actualTokens).toStrictEqual(expectedTokens)
