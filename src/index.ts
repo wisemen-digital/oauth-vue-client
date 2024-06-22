@@ -1,53 +1,61 @@
-import type { OAuth2ClientGrantType, OAuth2ClientTokensWithExpiration } from '@appwise/oauth2-client'
-import { OAuth2Client, TokenStore } from '@appwise/oauth2-client'
-import type { AxiosStatic, InternalAxiosRequestConfig } from 'axios'
+import type {
+  AxiosStatic,
+  InternalAxiosRequestConfig,
+} from 'axios'
+
+import type {
+  OAuth2ClientGrantType,
+  OAuth2ClientTokensWithExpiration,
+} from './oAuthClient'
+import { OAuth2Client, TokenStore } from './oAuthClient'
 
 interface OAuth2VueClientOptions {
-  axios: AxiosStatic
   clientId: string
-  clientSecret: string
-  tokenEndpoint: string
-  scopes?: string[]
   isMock?: boolean
+  axios: AxiosStatic
+  clientSecret: string
+  scopes?: string[]
+  tokenEndpoint: string
 }
 
 export class OAuth2VueClient {
-  private oAuthFactory: OAuth2Client
   private client: TokenStore | null = null
+  private oAuthFactory: OAuth2Client
 
   constructor(private readonly options: OAuth2VueClientOptions) {
     const {
-      axios,
       clientId,
+      axios,
       clientSecret,
       tokenEndpoint,
     } = options
 
     this.oAuthFactory = new OAuth2Client({
-      axios,
       clientId,
+      axios,
       clientSecret,
       tokenEndpoint,
     })
 
     const tokens = this.loadTokensFromLocalStorage()
 
-    if (tokens !== null)
+    if (tokens !== null) {
       this.client = this.createClient(tokens)
+    }
   }
 
   private createClient(tokens: OAuth2ClientTokensWithExpiration): TokenStore {
     const {
-      axios,
       clientId,
+      axios,
       clientSecret,
       tokenEndpoint,
     } = this.options
 
     const client = new TokenStore(
       {
-        axios,
         clientId,
+        axios,
         clientSecret,
         tokenEndpoint,
       },
@@ -61,35 +69,49 @@ export class OAuth2VueClient {
     return client
   }
 
-  private saveTokensToLocalStorage(tokens: OAuth2ClientTokensWithExpiration | null): void {
-    if (tokens === null)
-      localStorage.removeItem('tokens')
-    else
-      localStorage.setItem('tokens', JSON.stringify(tokens))
-  }
-
   private loadTokensFromLocalStorage(): OAuth2ClientTokensWithExpiration | null {
     const tokens = localStorage.getItem('tokens')
 
-    if (tokens === null)
+    if (tokens === null) {
       return null
+    }
 
     return JSON.parse(tokens) as OAuth2ClientTokensWithExpiration
-  }
-
-  public getClient(): TokenStore | null {
-    return this.client
   }
 
   private removeClient(): void {
     this.client = null
   }
 
-  public async loginPassword(username: string, password: string): Promise<void> {
-    if (this.options.isMock)
-      return Promise.resolve()
+  private saveTokensToLocalStorage(tokens: OAuth2ClientTokensWithExpiration | null): void {
+    if (tokens === null) {
+      localStorage.removeItem('tokens')
+    }
+    else {
+      localStorage.setItem('tokens', JSON.stringify(tokens))
+    }
+  }
 
-    const client = await this.oAuthFactory.loginPassword(username, password)
+  public getClient(): TokenStore | null {
+    return this.client
+  }
+
+  public isLoggedIn(): boolean {
+    if (this.options.isMock === true) {
+      return true
+    }
+
+    const client = this.getClient()
+
+    return client?.getTokens() != null
+  }
+
+  public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
+    if (this.options.isMock === true) {
+      return Promise.resolve()
+    }
+
+    const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
 
     const tokens = client.getTokens()
 
@@ -97,11 +119,12 @@ export class OAuth2VueClient {
     this.client = this.createClient(tokens)
   }
 
-  public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
-    if (this.options.isMock)
+  public async loginPassword(username: string, password: string): Promise<void> {
+    if (this.options.isMock === true) {
       return Promise.resolve()
+    }
 
-    const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
+    const client = await this.oAuthFactory.loginPassword(username, password)
 
     const tokens = client.getTokens()
 
@@ -113,14 +136,6 @@ export class OAuth2VueClient {
     this.saveTokensToLocalStorage(null)
     this.removeClient()
   }
-
-  public isLoggedIn(): boolean {
-    if (this.options.isMock)
-      return true
-
-    const client = this.getClient()
-    return client?.getTokens() != null
-  }
 }
 
 export async function addAuthorizationHeader(
@@ -129,8 +144,9 @@ export async function addAuthorizationHeader(
 ): Promise<InternalAxiosRequestConfig<unknown>> {
   const client = oAuthClient.getClient()
 
-  if (client === null)
+  if (client === null) {
     return config
+  }
 
   try {
     const token = await client.getAccessToken()
