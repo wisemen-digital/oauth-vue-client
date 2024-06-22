@@ -86,10 +86,11 @@ export class OAuth2VueClient {
   private saveTokensToLocalStorage(tokens: OAuth2ClientTokensWithExpiration | null): void {
     if (tokens === null) {
       localStorage.removeItem('tokens')
+
+      return
     }
-    else {
-      localStorage.setItem('tokens', JSON.stringify(tokens))
-    }
+
+    localStorage.setItem('tokens', JSON.stringify(tokens))
   }
 
   public getClient(): TokenStore | null {

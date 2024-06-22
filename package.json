@@ -32,7 +32,8 @@
   "scripts": {
     "build": "unbuild",
     "dev": "unbuild --stub",
-    "lint": "eslint . --fix",
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix",
     "clean": "pnpm lint && pnpm typecheck && pnpm test",
     "prepublishOnly": "nr build",
     "release": "bumpp && npm publish",
