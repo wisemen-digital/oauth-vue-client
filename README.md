@@ -5,7 +5,7 @@ This is a Vue.js client that uses our customer oAuthClient package to authentica
 ### Installation
 
 ```bash
-pnpm install @wisemen/oauth-vue-client
+pnpm install @wisemen/oauth2-vue-client
 ```
 
 ### Usage
