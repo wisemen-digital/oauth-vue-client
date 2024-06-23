@@ -1,15 +1,5 @@
-// @ts-check
-import antfu from '@antfu/eslint-config'
+import eslintVueConfig from '@wisemen/eslint-config-vue'
 
-export default antfu(
-  {
-    ignores: [
-      // eslint ignore globs here
-    ],
-  },
-  {
-    rules: {
-      // overrides
-    },
-  },
-)
+export default [
+  ...(await eslintVueConfig),
+]
