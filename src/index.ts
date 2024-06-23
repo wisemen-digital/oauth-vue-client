@@ -18,23 +18,26 @@ interface OAuth2VueClientOptions {
   tokenEndpoint: string
 }
 
+const MOCK_TOKENS: OAuth2ClientTokensWithExpiration = {
+  expires_at: 1000000,
+  access_token: 'fake_access_token',
+  expires_in: 1000000,
+  refresh_token: 'fake_refresh_token',
+  scope: '',
+  token_type: 'fake_token',
+}
+
 export class OAuth2VueClient {
   private client: TokenStore | null = null
   private oAuthFactory: OAuth2Client
 
   constructor(private readonly options: OAuth2VueClientOptions) {
-    const {
-      clientId,
-      axios,
-      clientSecret,
-      tokenEndpoint,
-    } = options
-
     this.oAuthFactory = new OAuth2Client({
-      clientId,
-      axios,
-      clientSecret,
-      tokenEndpoint,
+      clientId: options.clientId,
+      isMock: options.isMock,
+      axios: options.axios,
+      clientSecret: options.clientSecret,
+      tokenEndpoint: options.tokenEndpoint,
     })
 
     const tokens = this.loadTokensFromLocalStorage()
@@ -45,19 +48,14 @@ export class OAuth2VueClient {
   }
 
   private createClient(tokens: OAuth2ClientTokensWithExpiration): TokenStore {
-    const {
-      clientId,
-      axios,
-      clientSecret,
-      tokenEndpoint,
-    } = this.options
-
     const client = new TokenStore(
       {
-        clientId,
-        axios,
-        clientSecret,
-        tokenEndpoint,
+        clientId: this.options.clientId,
+        isMock: this.options.isMock,
+        axios: this.options.axios,
+        clientSecret: this.options.clientSecret,
+        scopes: this.options.scopes,
+        tokenEndpoint: this.options.tokenEndpoint,
       },
       tokens,
     )
@@ -98,7 +96,9 @@ export class OAuth2VueClient {
   }
 
   public isLoggedIn(): boolean {
-    if (this.options.isMock === true) {
+    const accessToken = this.loadTokensFromLocalStorage()?.access_token
+
+    if (this.options.isMock === true && accessToken === MOCK_TOKENS.access_token) {
       return true
     }
 
@@ -109,7 +109,9 @@ export class OAuth2VueClient {
 
   public async loginAuthorisation(code: string, state: string, grantType: OAuth2ClientGrantType): Promise<void> {
     if (this.options.isMock === true) {
-      return Promise.resolve()
+      this.saveTokensToLocalStorage(MOCK_TOKENS)
+
+      return
     }
 
     const client = await this.oAuthFactory.loginAuthorization(code, state, grantType)
@@ -122,7 +124,9 @@ export class OAuth2VueClient {
 
   public async loginPassword(username: string, password: string): Promise<void> {
     if (this.options.isMock === true) {
-      return Promise.resolve()
+      this.saveTokensToLocalStorage(MOCK_TOKENS)
+
+      return
     }
 
     const client = await this.oAuthFactory.loginPassword(username, password)

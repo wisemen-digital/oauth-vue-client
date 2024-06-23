@@ -1,7 +1,7 @@
 {
   "name": "@wisemen/oauth2-vue-client",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packageManager": "pnpm@8.12.1",
   "description": "_description_",
   "author": "Wouter Laermans <wouter.laermans@wisemen.digital>, Jeroen Van Caekenberghe <jeroen.vancaekenberghe@wisemen.digital>",
@@ -38,7 +38,7 @@
     "prepublishOnly": "nr build",
     "release": "bumpp && npm publish",
     "start": "esno src/index.ts",
-    "test": "vitest",
+    "test": "vitest --run",
     "typecheck": "tsc --noEmit",
     "prepare": "simple-git-hooks"
   },

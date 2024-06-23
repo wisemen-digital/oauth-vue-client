@@ -2,6 +2,7 @@ import type { Axios, AxiosInstance } from 'axios'
 
 interface OAuth2ClientOptions {
   clientId: string
+  isMock?: boolean
   axios: Axios | AxiosInstance
   clientSecret: string
   scopes?: string[]
@@ -45,15 +46,17 @@ export class TokenStore {
   }
 
   private async getNewAccessToken(refreshToken: string): Promise<OAuth2ClientTokensWithExpiration> {
+    const request = {
+      client_id: this.options.clientId,
+      client_secret: this.options.clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+      scope: this.options.scopes?.join(' '),
+    }
+
     const response = await this.options.axios.post<OAuth2ClientTokens>(
       this.options.tokenEndpoint,
-      {
-        client_id: this.options.clientId,
-        client_secret: this.options.clientSecret,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        scope: this.options.scopes?.join(' '),
-      },
+      request,
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -76,6 +79,10 @@ export class TokenStore {
   }
 
   private async refreshToken(): Promise<void> {
+    if (this.options.isMock === true) {
+      return
+    }
+
     if (this._promise != null) {
       return this._promise
     }
