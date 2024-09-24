@@ -37,6 +37,7 @@ export class OAuth2VueClient {
       isMock: options.isMock,
       axios: options.axios,
       clientSecret: options.clientSecret,
+      scopes: options.scopes,
       tokenEndpoint: options.tokenEndpoint,
     })
 
