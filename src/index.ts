@@ -48,6 +48,28 @@ export class OAuth2VueClient {
     }
   }
 
+  static async addAuthorizationHeader(
+    oAuthClient: OAuth2VueClient,
+    config: InternalAxiosRequestConfig<unknown>,
+  ): Promise<InternalAxiosRequestConfig<unknown>> {
+    const client = oAuthClient.getClient()
+
+    if (client === null) {
+      return config
+    }
+
+    try {
+      const token = await client.getAccessToken()
+
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    catch {
+      console.warn('Failed to get access token, logging out')
+    }
+
+    return config
+  }
+
   private createClient(tokens: OAuth2ClientTokensWithExpiration): TokenStore {
     const client = new TokenStore(
       {
@@ -144,24 +166,4 @@ export class OAuth2VueClient {
   }
 }
 
-export async function addAuthorizationHeader(
-  oAuthClient: OAuth2VueClient,
-  config: InternalAxiosRequestConfig<unknown>,
-): Promise<InternalAxiosRequestConfig<unknown>> {
-  const client = oAuthClient.getClient()
-
-  if (client === null) {
-    return config
-  }
-
-  try {
-    const token = await client.getAccessToken()
-
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  catch {
-    console.warn('Failed to get access token, logging out')
-  }
-
-  return config
-}
+export { OAuth2ZitadelClient } from './oAuthZitadelClient'

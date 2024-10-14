@@ -1,9 +1,9 @@
-import type { Axios, AxiosInstance } from 'axios'
+import type { AxiosInstance } from 'axios'
 
 interface OAuth2ClientOptions {
   clientId: string
   isMock?: boolean
-  axios: Axios | AxiosInstance
+  axios: AxiosInstance
   clientSecret: string
   scopes?: string[]
   tokenEndpoint: string
