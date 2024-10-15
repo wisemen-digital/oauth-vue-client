@@ -35,13 +35,6 @@ interface ZitadelClientOptions {
   state?: string
 }
 
-interface TokenStoreOptions {
-  clientId: string
-  axios: AxiosInstance
-  scopes?: string[]
-  tokenEndpoint: string
-}
-
 export interface OAuth2Tokens {
   access_token: string
   expires_in: number
@@ -53,6 +46,15 @@ export interface OAuth2Tokens {
 
 export interface OAuth2TokensWithExpiration extends OAuth2Tokens {
   expires_at: number
+}
+
+export type GrantType = 'ad' | 'authorization_code' | 'password' | 'refresh_token'
+
+interface TokenStoreOptions {
+  clientId: string
+  axios: AxiosInstance
+  scopes?: string[]
+  tokenEndpoint: string
 }
 
 class TokenStore {
@@ -157,8 +159,6 @@ class TokenStore {
     localStorage.setItem('tokens', JSON.stringify(tokens))
   }
 }
-
-export type GrantType = 'ad' | 'authorization_code' | 'password' | 'refresh_token'
 
 export class OAuth2ZitadelClient {
   private client: TokenStore | null = null
