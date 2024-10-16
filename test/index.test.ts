@@ -6,10 +6,7 @@ import {
   vi,
 } from 'vitest'
 
-import {
-  addAuthorizationHeader,
-  OAuth2VueClient,
-} from '../src'
+import { OAuth2VueClient } from '../src'
 import type { OAuth2ClientTokensWithExpiration } from '../src/oAuthClient'
 
 describe('oAuth2VueClient', () => {
@@ -77,7 +74,7 @@ describe('oAuth2VueClient', () => {
       headers: new AxiosHeaders(),
     }
 
-    await addAuthorizationHeader(oAuthClient, config)
+    await OAuth2VueClient.addAuthorizationHeader(oAuthClient, config)
 
     expect(config.headers.Authorization).toBe(`Bearer ${MOCK_TOKENS.access_token}`)
   })
