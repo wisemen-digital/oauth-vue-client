@@ -27,7 +27,7 @@ describe('oAuth2VueClient', () => {
   }
 
   it('creates a new client using the constructor', () => {
-    expect(1).toEqual(1)
+    expect(1).toBe(1)
 
     const oAuthClient = new OAuth2VueClient({
       clientId: CLIENT_ID,
@@ -47,7 +47,7 @@ describe('oAuth2VueClient', () => {
       tokenEndpoint: TOKEN_ENDPOINT,
     })
 
-    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+    vi.spyOn(axios, 'post').mockResolvedValue({ data: MOCK_TOKENS })
 
     await oAuthClient.loginPassword('username', 'password')
 
@@ -69,7 +69,7 @@ describe('oAuth2VueClient', () => {
       tokenEndpoint: TOKEN_ENDPOINT,
     })
 
-    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+    vi.spyOn(axios, 'post').mockResolvedValue({ data: MOCK_TOKENS })
 
     await oAuthClient.loginPassword('username', 'password')
 
@@ -79,7 +79,7 @@ describe('oAuth2VueClient', () => {
 
     await addAuthorizationHeader(oAuthClient, config)
 
-    expect(config.headers.Authorization).toEqual(`Bearer ${MOCK_TOKENS.access_token}`)
+    expect(config.headers.Authorization).toBe(`Bearer ${MOCK_TOKENS.access_token}`)
   })
 
   it('adds tokens to localStorage on login', async () => {
@@ -90,7 +90,7 @@ describe('oAuth2VueClient', () => {
       tokenEndpoint: TOKEN_ENDPOINT,
     })
 
-    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+    vi.spyOn(axios, 'post').mockResolvedValue({ data: MOCK_TOKENS })
 
     await oAuthClient.loginPassword('username', 'password')
 
@@ -112,7 +112,7 @@ describe('oAuth2VueClient', () => {
       tokenEndpoint: TOKEN_ENDPOINT,
     })
 
-    vi.spyOn(axios, 'post').mockImplementation(() => Promise.resolve({ data: MOCK_TOKENS }))
+    vi.spyOn(axios, 'post').mockResolvedValue({ data: MOCK_TOKENS })
 
     await oAuthClient.loginPassword('username', 'password')
 
