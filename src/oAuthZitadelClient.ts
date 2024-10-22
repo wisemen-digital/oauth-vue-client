@@ -5,7 +5,7 @@ import type {
 } from 'axios'
 import pkceChallenge from 'pkce-challenge'
 
-interface OAuth2VueClientOptions {
+export interface OAuth2VueClientOptions {
   authorization: {
     clientId: string
     grantType: GrantType
@@ -53,11 +53,11 @@ interface TokenStoreOptions {
   tokenEndpoint: string
 }
 
-interface JwtToken {
+interface Token {
   exp: number
 }
 
-function decodeJwtToken(token: string): JwtToken {
+function decodeToken(token: string): Token {
   const base64Url = token.split('.')[1]
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
   const jsonPayload = decodeURIComponent(
@@ -100,7 +100,7 @@ class TokenStore {
       },
     )
 
-    const decodedToken = decodeJwtToken(response.data.access_token)
+    const decodedToken = decodeToken(response.data.access_token)
 
     return {
       expires_at: decodedToken.exp * 1000,
@@ -201,7 +201,7 @@ export class OAuth2ZitadelClient {
       },
     })
 
-    const decodedToken = decodeJwtToken(response.data.access_token)
+    const decodedToken = decodeToken(response.data.access_token)
 
     return new TokenStore(
       {
