@@ -5,7 +5,7 @@ import type {
 } from 'axios'
 import pkceChallenge from 'pkce-challenge'
 
-interface OAuth2VueClientOptions {
+export interface OAuth2VueClientOptions {
   authorization: {
     clientId: string
     grantType: GrantType
@@ -36,16 +36,12 @@ interface ZitadelClientOptions {
 }
 
 export interface OAuth2Tokens {
+  expires_at: number
   access_token: string
-  expires_in: number
   id_token: string
   refresh_token: string
   scope: string
   token_type: string
-}
-
-export interface OAuth2TokensWithExpiration extends OAuth2Tokens {
-  expires_at: number
 }
 
 export type GrantType = 'ad' | 'authorization_code' | 'password' | 'refresh_token'
@@ -57,12 +53,31 @@ interface TokenStoreOptions {
   tokenEndpoint: string
 }
 
+const LOCAL_STORAGE_KEY = 'tokens'
+
+interface Token {
+  exp: number
+}
+
+function decodeToken(token: string): Token {
+  const base64Url = token.split('.')[1]
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`)
+      .join(''),
+  )
+
+  return JSON.parse(jsonPayload)
+}
+
 class TokenStore {
   private _promise: Promise<void> | null = null
 
   constructor(
     private readonly options: TokenStoreOptions,
-    tokens?: OAuth2TokensWithExpiration,
+    tokens?: OAuth2Tokens,
   ) {
     this.setTokens(tokens)
   }
@@ -71,7 +86,7 @@ class TokenStore {
     return Date.now() >= this.getTokens().expires_at
   }
 
-  private async getNewAccessToken(refreshToken: string): Promise<OAuth2TokensWithExpiration> {
+  private async getNewAccessToken(refreshToken: string): Promise<OAuth2Tokens> {
     const response = await this.options.axios.post<OAuth2Tokens>(
       this.options.tokenEndpoint,
       {
@@ -87,10 +102,11 @@ class TokenStore {
       },
     )
 
+    const decodedToken = decodeToken(response.data.access_token)
+
     return {
-      expires_at: Date.now() + response.data.expires_in * 1000,
+      expires_at: decodedToken.exp * 1000,
       access_token: response.data.access_token,
-      expires_in: response.data.expires_in,
       id_token: response.data.id_token,
       refresh_token: response.data.refresh_token,
       scope: response.data.scope,
@@ -132,7 +148,7 @@ class TokenStore {
   }
 
   public clearTokens(): void {
-    localStorage.removeItem('tokens')
+    localStorage.removeItem(LOCAL_STORAGE_KEY)
   }
 
   public async getAccessToken(): Promise<string> {
@@ -147,16 +163,16 @@ class TokenStore {
     return this.getTokens().refresh_token
   }
 
-  public getTokens(): OAuth2TokensWithExpiration {
-    return JSON.parse(localStorage.getItem('tokens') as string) as OAuth2TokensWithExpiration
+  public getTokens(): OAuth2Tokens {
+    return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) as string) as OAuth2Tokens
   }
 
-  public setTokens(tokens?: OAuth2TokensWithExpiration): void {
+  public setTokens(tokens?: OAuth2Tokens): void {
     if (tokens === undefined) {
       return
     }
 
-    localStorage.setItem('tokens', JSON.stringify(tokens))
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tokens))
   }
 }
 
@@ -169,7 +185,7 @@ export class OAuth2ZitadelClient {
     this.client = this.createClient()
   }
 
-  private createClient(tokens?: OAuth2TokensWithExpiration): TokenStore {
+  private createClient(tokens?: OAuth2Tokens): TokenStore {
     return new TokenStore(
       {
         clientId: this.options.authorization.clientId,
@@ -181,11 +197,13 @@ export class OAuth2ZitadelClient {
   }
 
   private async login(clientOptions: ZitadelClientOptions): Promise<TokenStore> {
-    const { data } = await this.options.axios.post<OAuth2Tokens>(this.options.tokenEndpoint, clientOptions, {
+    const response = await this.options.axios.post<OAuth2Tokens>(this.options.tokenEndpoint, clientOptions, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     })
+
+    const decodedToken = decodeToken(response.data.access_token)
 
     return new TokenStore(
       {
@@ -195,8 +213,12 @@ export class OAuth2ZitadelClient {
         tokenEndpoint: this.options.tokenEndpoint,
       },
       {
-        ...data,
-        expires_at: Date.now() + data.expires_in * 1000,
+        expires_at: decodedToken.exp * 1000,
+        access_token: response.data.access_token,
+        id_token: response.data.id_token,
+        refresh_token: response.data.refresh_token,
+        scope: response.data.scope,
+        token_type: response.data.token_type,
       },
     )
   }
@@ -259,6 +281,7 @@ export class OAuth2ZitadelClient {
   public getLogoutUrl(): string {
     const searchParams = new URLSearchParams()
 
+    searchParams.append('client_id', this.options.authorization.clientId)
     searchParams.append('post_logout_redirect_uri', this.options.authorization.postLogoutRedirectUri)
 
     return `${this.options.authorization.logoutUrl}?${searchParams.toString()}`
@@ -323,7 +346,6 @@ export class OAuth2ZitadelClient {
     this.client?.setTokens({
       expires_at: 0,
       access_token: '',
-      expires_in: 0,
       id_token: '',
       refresh_token: '',
       scope: '',
