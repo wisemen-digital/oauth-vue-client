@@ -1,7 +1,7 @@
 {
   "name": "@wisemen/oauth2-vue-client",
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "packageManager": "pnpm@9.5.0",
   "description": "_description_",
   "author": "Wouter Laermans <wouter.laermans@wisemen.digital>, Jeroen Van Caekenberghe <jeroen.vancaekenberghe@wisemen.digital>",
