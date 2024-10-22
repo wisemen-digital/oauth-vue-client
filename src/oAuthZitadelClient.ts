@@ -279,6 +279,7 @@ export class OAuth2ZitadelClient {
   public getLogoutUrl(): string {
     const searchParams = new URLSearchParams()
 
+    searchParams.append('client_id', this.options.authorization.clientId)
     searchParams.append('post_logout_redirect_uri', this.options.authorization.postLogoutRedirectUri)
 
     return `${this.options.authorization.logoutUrl}?${searchParams.toString()}`
