@@ -53,6 +53,8 @@ interface TokenStoreOptions {
   tokenEndpoint: string
 }
 
+const LOCAL_STORAGE_KEY = 'tokens'
+
 interface Token {
   exp: number
 }
@@ -146,7 +148,7 @@ class TokenStore {
   }
 
   public clearTokens(): void {
-    localStorage.removeItem('tokens')
+    localStorage.removeItem(LOCAL_STORAGE_KEY)
   }
 
   public async getAccessToken(): Promise<string> {
@@ -162,7 +164,7 @@ class TokenStore {
   }
 
   public getTokens(): OAuth2Tokens {
-    return JSON.parse(localStorage.getItem('tokens') as string) as OAuth2Tokens
+    return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) as string) as OAuth2Tokens
   }
 
   public setTokens(tokens?: OAuth2Tokens): void {
@@ -170,7 +172,7 @@ class TokenStore {
       return
     }
 
-    localStorage.setItem('tokens', JSON.stringify(tokens))
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tokens))
   }
 }
 
