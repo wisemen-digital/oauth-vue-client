@@ -18,7 +18,7 @@ import { OAuth2ZitadelClient } from '../src'
 import type {
   OAuth2Tokens,
   OAuth2VueClientOptions,
-} from '../src/oAuthZitadelClient'
+} from '../src/zitadelClient'
 
 let mockAxios: AxiosMockAdapter
 const tokenEndpoint = '/token-endpoint'
