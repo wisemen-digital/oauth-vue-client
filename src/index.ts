@@ -1,2 +1,4 @@
 export { OAuth2VueClient } from './oAuthClient'
-export { OAuth2ZitadelClient } from './oAuthZitadelClient'
+export type { ZitadelUser } from './zitadel.type'
+export type { OAuth2VueClientOptions } from './zitadel.type'
+export { ZitadelClient } from './zitadelClient'
