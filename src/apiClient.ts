@@ -14,7 +14,7 @@ export interface OAuth2Tokens {
   token_type: string
 }
 
-interface TokenStoreOptions {
+interface ApiClientOptions {
   clientId: string
   axios: AxiosInstance
   baseUrl: string
@@ -45,12 +45,7 @@ function decodeToken(token: string): Token {
 export class ApiClient {
   private _promise: Promise<void> | null = null
 
-  constructor(
-    private readonly options: TokenStoreOptions,
-    tokens?: OAuth2Tokens,
-  ) {
-    this.setTokens(tokens)
-  }
+  constructor(private readonly options: ApiClientOptions) {}
 
   private accessTokenExpired(): boolean {
     return Date.now() >= this.getTokens().expires_at

@@ -4,7 +4,6 @@ import type {
 } from 'axios'
 import pkceChallenge from 'pkce-challenge'
 
-import type { OAuth2Tokens } from './apiClient'
 import { ApiClient } from './apiClient'
 import type {
   OAuth2VueClientOptions,
@@ -17,11 +16,7 @@ export class ZitadelClient {
 
   constructor(private readonly options: OAuth2VueClientOptions) {
     this.offline = options.offline ?? false
-    this.client = this.createClient()
-  }
-
-  private createClient(tokens?: OAuth2Tokens): ApiClient {
-    return new ApiClient(
+    this.client = new ApiClient(
       {
         clientId: this.options.clientId,
         axios: this.options.axios,
@@ -29,7 +24,6 @@ export class ZitadelClient {
         redirectUri: this.options.loginRedirectUri,
         scopes: this.options.scopes ?? this.getDefaultScopes(),
       },
-      tokens,
     )
   }
 
