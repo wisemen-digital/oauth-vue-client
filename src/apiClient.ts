@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 import type { AxiosInstance } from 'axios'
 
+import type {
+  ZitadelUser,
+} from './zitadel.type'
+
 export interface OAuth2Tokens {
   expires_at: number
   access_token: string
@@ -13,9 +17,9 @@ export interface OAuth2Tokens {
 interface TokenStoreOptions {
   clientId: string
   axios: AxiosInstance
+  baseUrl: string
   redirectUri: string
   scopes?: string[]
-  tokenEndpoint: string
 }
 
 interface Token {
@@ -38,7 +42,7 @@ function decodeToken(token: string): Token {
   return JSON.parse(jsonPayload)
 }
 
-export class TokenStore {
+export class ApiClient {
   private _promise: Promise<void> | null = null
 
   constructor(
@@ -54,7 +58,7 @@ export class TokenStore {
 
   private async getNewAccessToken(refreshToken: string): Promise<OAuth2Tokens> {
     const response = await this.options.axios.post<OAuth2Tokens>(
-      this.options.tokenEndpoint,
+      `${this.options.baseUrl}/oauth/v2/token`,
       {
         client_id: this.options.clientId,
         grant_type: 'refresh_token',
@@ -133,10 +137,22 @@ export class TokenStore {
     return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) as string) as OAuth2Tokens
   }
 
-  public async login(code: string): Promise<void> {
+  async getUserInfo(): Promise<ZitadelUser> {
+    const accessToken = await this.getAccessToken()
+
+    const response = await this.options.axios.get(`${this.options.baseUrl}/oidc/v1/userinfo`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    return response.data
+  }
+
+  public async loginWithCode(code: string): Promise<void> {
     const codeVerifier = localStorage.getItem(CODE_VERIFIER_KEY)
 
-    const response = await this.options.axios.post<OAuth2Tokens>(this.options.tokenEndpoint, {
+    const response = await this.options.axios.post<OAuth2Tokens>(`${this.options.baseUrl}/oauth/v2/token`, {
       client_id: this.options.clientId,
       code,
       code_verifier: codeVerifier,

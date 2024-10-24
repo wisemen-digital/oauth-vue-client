@@ -1,8 +1,6 @@
 import { Buffer } from 'node:buffer'
 
-import type {
-  InternalAxiosRequestConfig,
-} from 'axios'
+import type { InternalAxiosRequestConfig } from 'axios'
 import axios, { AxiosHeaders } from 'axios'
 import AxiosMockAdapter from 'axios-mock-adapter'
 import {
@@ -14,14 +12,14 @@ import {
   vi,
 } from 'vitest'
 
-import { OAuth2ZitadelClient } from '../src'
 import type {
-  OAuth2Tokens,
   OAuth2VueClientOptions,
-} from '../src/zitadelClient'
+  ZitadelUser,
+} from '../src'
+import { ZitadelClient } from '../src'
+import type { OAuth2Tokens } from '../src/apiClient'
 
 let mockAxios: AxiosMockAdapter
-const tokenEndpoint = '/token-endpoint'
 
 interface Token {
   exp: number
@@ -47,36 +45,30 @@ const mockTokens: OAuth2Tokens = {
   token_type: 'Bearer',
 }
 
+const BASE_URL = 'http://auth.base.url'
+
 const axiosInstance = axios.create({
-  baseURL: 'http://auth.base.url',
+  baseURL: BASE_URL,
 })
 
 const clientOptions: OAuth2VueClientOptions = {
-  authorization: {
-    clientId: 'client_id_value',
-    grantType: 'authorization_code',
-    logoutUrl: '/logout',
-    postLogoutRedirectUri: '/post-logout',
-    redirectUri: '/redirect',
-    scopes: [
-      'openid',
-    ],
-    url: '/authorize',
-  },
+  clientId: 'client_id_value',
+  organizationId: 'organization_id_value',
   axios: axiosInstance,
+  baseUrl: BASE_URL,
+  loginRedirectUri: '/login',
   offline: false,
-  tokenEndpoint,
-  userInfoEndpoint: '/userinfo',
+  postLogoutRedirectUri: '/post-logout',
 }
 
 describe('oAuth2ZitadelClient', () => {
-  let client: OAuth2ZitadelClient
+  let client: ZitadelClient
 
   beforeEach(() => {
     // eslint-disable-next-line ts/ban-ts-comment
     // @ts-ignore MockAdapter is not typed correctly https://github.com/ctimmerm/axios-mock-adapter/issues/400
     mockAxios = new AxiosMockAdapter(axiosInstance)
-    client = new OAuth2ZitadelClient(clientOptions)
+    client = new ZitadelClient(clientOptions)
   })
 
   afterEach(() => {
@@ -106,7 +98,7 @@ describe('oAuth2ZitadelClient', () => {
     it('should generate the logout URL', () => {
       const url = client.getLogoutUrl()
 
-      expect(url).toContain('/logout?client_id=client_id_value&post_logout_redirect_uri=%2Fpost-logout')
+      expect(url).toContain('http://auth.base.url/oidc/v1/end_session?client_id=client_id_value&post_logout_redirect_uri=%2Fpost-logout')
     })
   })
 
@@ -131,7 +123,7 @@ describe('oAuth2ZitadelClient', () => {
 
       localStorage.setItem('tokens', JSON.stringify(expiredTokens))
 
-      mockAxios.onPost(tokenEndpoint).reply(200, mockTokens)
+      mockAxios.onPost('/oauth/v2/token').reply(200, mockTokens)
 
       const config: InternalAxiosRequestConfig = {
         headers: AxiosHeaders.from(),
@@ -158,18 +150,30 @@ describe('oAuth2ZitadelClient', () => {
     it('should fetch user info from the userInfo endpoint', async () => {
       localStorage.setItem('tokens', JSON.stringify(mockTokens))
 
-      mockAxios.onGet('/userinfo').reply(200, { name: 'Test User' })
+      const user: ZitadelUser = {
+        updated_at: 0,
+        name: 'test',
+        email: 'test@test.com',
+        email_verified: false,
+        family_name: 'test',
+        given_name: 'test',
+        locale: 'en',
+        preferred_username: 'test',
+        sub: 'test',
+      }
 
-      const userInfo = await client.getUserInfo<{ name: string }>()
+      mockAxios.onGet('/oidc/v1/userinfo').reply(200, user)
 
-      expect(userInfo.name).toBe('Test User')
+      const userInfo = await client.getUserInfo()
+
+      expect(userInfo).toStrictEqual(user)
     })
 
     it('should throw an error if client is not logged in', async () => {
       localStorage.removeItem('tokens')
       client.logout()
 
-      await expect(client.getUserInfo()).rejects.toThrow('Client is not logged in')
+      await expect(client.getUserInfo()).rejects.toThrow('Client is not initialized')
     })
   })
 
@@ -177,9 +181,9 @@ describe('oAuth2ZitadelClient', () => {
     it('should perform login using authorization code', async () => {
       localStorage.setItem('code_verifier', 'code_verifier_value')
 
-      mockAxios.onPost(tokenEndpoint).reply(200, mockTokens)
+      mockAxios.onPost('/oauth/v2/token').reply(200, mockTokens)
 
-      await client.loginAuthorization('authorization_code_value')
+      await client.loginWithCode('authorization_code_value')
 
       const storedTokens = JSON.parse(localStorage.getItem('tokens') as string)
 

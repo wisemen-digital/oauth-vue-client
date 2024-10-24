@@ -1,51 +1,18 @@
 /* eslint-disable no-console */
 import type {
-  AxiosInstance,
   InternalAxiosRequestConfig,
 } from 'axios'
 import pkceChallenge from 'pkce-challenge'
 
-import type { OAuth2Tokens } from './tokenStore'
-import { TokenStore } from './tokenStore'
-
-export interface OAuth2VueClientOptions {
-  /*
-  * The client ID
-  */
-  clientId: string
-  /*
-  * The organization ID
-  */
-  organizationId: string
-  /*
-  * The Axios instance to use for requests
-  */
-  axios: AxiosInstance
-  /*
-  * The base URL of the OAuth2 server
-  */
-  baseUrl: string
-  /*
-  * The URL to redirect to after login
-  */
-  loginRedirectUri: string
-  /*
-   * If offline is true, the client wil bypass everything and work without a real login
-   */
-  offline?: boolean
-  /*
-  * The URL to redirect to after logout
-  */
-  postLogoutRedirectUri: string
-  /*
-  * The scopes to request from the OAuth2 server
-  * Default: ['openid', 'profile', 'email', 'offline_access', `urn:zitadel:iam:org:id:${organizationId}`]
-  */
-  scopes?: string[]
-}
+import type { OAuth2Tokens } from './apiClient'
+import { ApiClient } from './apiClient'
+import type {
+  OAuth2VueClientOptions,
+  ZitadelUser,
+} from './zitadel.type'
 
 export class ZitadelClient {
-  private client: TokenStore | null = null
+  private client: ApiClient | null = null
   private readonly offline: boolean
 
   constructor(private readonly options: OAuth2VueClientOptions) {
@@ -53,14 +20,14 @@ export class ZitadelClient {
     this.client = this.createClient()
   }
 
-  private createClient(tokens?: OAuth2Tokens): TokenStore {
-    return new TokenStore(
+  private createClient(tokens?: OAuth2Tokens): ApiClient {
+    return new ApiClient(
       {
         clientId: this.options.clientId,
         axios: this.options.axios,
+        baseUrl: this.options.baseUrl,
         redirectUri: this.options.loginRedirectUri,
         scopes: this.options.scopes ?? this.getDefaultScopes(),
-        tokenEndpoint: `${this.options.baseUrl}/oauth/v2/token`,
       },
       tokens,
     )
@@ -104,7 +71,7 @@ export class ZitadelClient {
     return config
   }
 
-  public getClient(): TokenStore | null {
+  public getClient(): ApiClient | null {
     return this.client
   }
 
@@ -137,18 +104,12 @@ export class ZitadelClient {
     return `${this.options.baseUrl}/oidc/v1/end_session?${searchParams.toString()}`
   }
 
-  async getUserInfo<TData>(): Promise<TData> {
+  async getUserInfo(): Promise<ZitadelUser> {
     if (this.client === null) {
       throw new Error('Client is not initialized')
     }
 
-    const response = await this.options.axios.get(`${this.options.baseUrl}/oidc/v1/userinfo`, {
-      headers: {
-        Authorization: `Bearer ${this.client.getTokens().access_token}`,
-      },
-    })
-
-    return response.data
+    return await this.client.getUserInfo()
   }
 
   public isLoggedIn(): boolean {
@@ -161,7 +122,15 @@ export class ZitadelClient {
     return client?.getTokens() != null
   }
 
-  public async login(code: string): Promise<void> {
+  public loginOffline(): void {
+    if (this.client === null) {
+      throw new Error('Client is not initialized')
+    }
+
+    this.client.setMockTokens()
+  }
+
+  public async loginWithCode(code: string): Promise<void> {
     if (this.options.offline === true) {
       this.loginOffline()
 
@@ -172,15 +141,7 @@ export class ZitadelClient {
       throw new Error('Client is not initialized')
     }
 
-    await this.client.login(code)
-  }
-
-  public loginOffline(): void {
-    if (this.client === null) {
-      throw new Error('Client is not initialized')
-    }
-
-    this.client.setMockTokens()
+    await this.client.loginWithCode(code)
   }
 
   public logout(): void {
