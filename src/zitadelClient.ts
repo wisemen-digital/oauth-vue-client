@@ -65,8 +65,33 @@ export class ZitadelClient {
     return config
   }
 
-  public getClient(): ApiClient | null {
+  public getClient(): ApiClient {
+    if (this.client === null) {
+      throw new Error('Client is not initialized')
+    }
+
     return this.client
+  }
+
+  public async getIdentityProviderLoginUrl(idpId: string): Promise<string> {
+    const searchParams = new URLSearchParams()
+
+    const codes = await pkceChallenge()
+
+    const scopes = this.options.scopes ?? this.getDefaultScopes()
+
+    scopes.push(`urn:zitadel:iam:org:idp:id:${idpId}`)
+
+    localStorage.setItem('code_verifier', codes.code_verifier)
+
+    searchParams.append('client_id', this.options.clientId)
+    searchParams.append('redirect_uri', this.options.loginRedirectUri)
+    searchParams.append('response_type', 'code')
+    searchParams.append('scope', scopes.join(' '))
+    searchParams.append('code_challenge', codes.code_challenge)
+    searchParams.append('code_challenge_method', 'S256')
+
+    return `${this.options.baseUrl}/oauth/v2/authorize?${searchParams.toString()}`
   }
 
   public async getLoginUrl(): Promise<string> {
@@ -99,11 +124,7 @@ export class ZitadelClient {
   }
 
   async getUserInfo(): Promise<ZitadelUser> {
-    if (this.client === null) {
-      throw new Error('Client is not initialized')
-    }
-
-    return await this.client.getUserInfo()
+    return await this.getClient().getUserInfo()
   }
 
   public isLoggedIn(): boolean {
@@ -111,9 +132,7 @@ export class ZitadelClient {
       return true
     }
 
-    const client = this.getClient()
-
-    return client?.getTokens() != null
+    return this.client?.getTokens() != null
   }
 
   public loginOffline(): void {
@@ -131,11 +150,7 @@ export class ZitadelClient {
       return
     }
 
-    if (this.client === null) {
-      throw new Error('Client is not initialized')
-    }
-
-    await this.client.loginWithCode(code)
+    await this.getClient().loginWithCode(code)
   }
 
   public logout(): void {
